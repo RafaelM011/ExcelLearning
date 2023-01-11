@@ -5,9 +5,8 @@ const wb = XLSX.utils.book_new();
 const file = XLSX.readFile('orden2.xlsx');
 const sheets = file.SheetNames
 const ws = file.Sheets[sheets[0]];
-const wsTable = {};
 
-const data = {
+const docData = {
     proceso: "INAGUJA-UC-CD-2022-0052",
     fecha: "Fecha de emision: 12/12/2022",
     tipo: "ORDEN DE COMPRA",
@@ -30,6 +29,48 @@ const data = {
     }
 }
 
+const tableData = [
+    {
+        item: "1",
+        codigo: "01",
+        descripcion: "d1",
+        d: "",
+        e: "",
+        cantidad: 1,
+        unidad: "UD",
+        precio: 1,
+        itbis: 1,
+    },
+    {
+        item: "2",
+        codigo: "02",
+        descripcion: "d2",
+        d: "",
+        e: "",
+        cantidad: 2,
+        unidad: "UD",
+        precio: 2,
+        itbis: 2,
+    },
+    {
+        item: "3",
+        codigo: "03",
+        descripcion: "d3",
+        d: "",
+        e: "",
+        cantidad: 3,
+        unidad: "UD",
+        precio: 3,
+        itbis: 3,
+    }
+]
+
+const tableElementsLenght = tableData.length;
+const lastRow = 50 + tableElementsLenght;
+const tableColumns = ['A','B','C','D','E','F','G','H','I'];
+const merge = [];
+
+//ARRAY OF CELLS TO STYLE
 const cellsMiddleAlign = ['G3','G4','G5','C8','C9','C11','C44','A38','A42','F38','F42'];
 const cellsLeftAlign = ['C13','C14','C15','C19','C20','C21','C22','C23','C27','C28','C29','C30','C31'];
 const cellsBlueLeft = ['A17','A25','A48'];
@@ -49,26 +90,25 @@ ws.H4 = {t:"", v:"", s: {border:{bottom:{style:'medium'}}}}, ws.I4 = {t:"", v:""
 ws.H1 = {...ws.H1, s:{alignment:{horizontal:"right"}}}
 
 //GENERAL
-ws.G4.v = data.proceso;
-ws.G5.v = data.fecha;
-ws.C9.v = data.tipo;
-ws.C13.v = data.numero;
-ws.C14.v = data.descripcion;
-ws.C15.v = data.modalidad;
-ws.C44.v = data.proceso;
+ws.G4.v = docData.proceso;
+ws.G5.v = docData.fecha;
+ws.C9.v = docData.tipo;
+ws.C13.v = docData.numero;
+ws.C14.v = docData.descripcion;
+ws.C15.v = docData.modalidad;
+ws.C44.v = docData.proceso;
 //PROVEEDOR
-ws.C19.v = data.datos_proveedor.razon;
-ws.C20.v = data.datos_proveedor.rnc;
-ws.C21.v = data.datos_proveedor.nombre;
-ws.C22.v = data.datos_proveedor.domicilio;
-ws.C23.v = data.datos_proveedor.telefono;
+ws.C19.v = docData.datos_proveedor.razon;
+ws.C20.v = docData.datos_proveedor.rnc;
+ws.C21.v = docData.datos_proveedor.nombre;
+ws.C22.v = docData.datos_proveedor.domicilio;
+ws.C23.v = docData.datos_proveedor.telefono;
 //CONTRATO
-ws.C27.v = data.datos_contrato.anticipo;
-ws.C28.v = data.datos_contrato.forma_de_pago;
-ws.C29.v = data.datos_contrato.plazo;
-ws.C30.v = data.datos_contrato.monto;
-ws.C31.v = data.datos_contrato.moneda;
-
+ws.C27.v = docData.datos_contrato.anticipo;
+ws.C28.v = docData.datos_contrato.forma_de_pago;
+ws.C29.v = docData.datos_contrato.plazo;
+ws.C30.v = docData.datos_contrato.monto;
+ws.C31.v = docData.datos_contrato.moneda;
 
 //STYLES
 cellsMiddleAlign.forEach(cell => {
@@ -225,6 +265,8 @@ ws['A34'].s = {
 }
 ws.C11.s.font.bold = false;
 ws.A14 = {...ws.A14, s: {alignment: {vertical: 'center'}}};
+ws.C27 = {...ws.C27, z: "10"}
+ws.C30 = {...ws.C30, z: "4"}
 
 ws['!rows'] = []
 ws['!cols'] = [ 
@@ -247,16 +289,49 @@ ws['!margins'] = {
     header: 0,
     footer: 0
 }
-ws.H51 = {...ws.H51, z: "4"}
-ws.I51 = {...ws.I51, z: "4"}
-ws.C30 = {...ws.C30, z: "4"}
-ws.C27 = {...ws.C27, z: "10"}
 
 ws['!rows'][13] = {hpx: (ws.C14.v.length/45)*15}
 
-//H51 z:"4", I51 z:"4"
 
-
+//Columna H, Columna I, z:'4'
+XLSX.utils.sheet_add_json(ws,tableData,{origin: "A51", skipHeader: true})
+for (let i = 51; i <= lastRow; i++){
+    tableColumns.forEach(column => {
+        if(column !== 'H' && column !== 'I'){
+            ws[column.concat(i)].s = {
+                alignment: {
+                    vertical: 'center',
+                    horizontal: 'center'
+                },
+                border: {
+                    top:{style:'medium'},
+                    bottom:{style:'medium'},
+                    left:{style:'medium'},
+                    right:{style:'medium'},
+                }
+            } 
+        }else{
+            for (let i = 51; i <= lastRow; i++){
+                ws[column.concat(i)].s = {
+                    alignment: {
+                        vertical: 'center',
+                        horizontal: 'center'
+                    },
+                    border: {
+                        top:{style:'medium'},
+                        bottom:{style:'medium'},
+                        left:{style:'medium'},
+                        right:{style:'medium'},
+                    }
+                }
+                ws[column.concat(i)].t = 'n'
+                ws[column.concat(i)].z = '4' 
+            }  
+        }
+    })
+    merge.push({s:{c:2, r:i-1}, e:{c:4, r:i-1}})
+}
+ws['!merges'] = ws['!merges'].concat(merge)
 
 XLSX.utils.book_append_sheet(wb,ws,'Orden');
 XLSX.writeFile(wb,'orden2.xlsx')
